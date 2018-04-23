@@ -6,8 +6,8 @@
 :External Dependencies: NumPy and OpenCV (see 'Pipfile' for packages)
 :Made with: PyCharm Community and pipenv
 """
-import numpy
-import cv2
+import numpy  # NumPy
+import cv2    # OpenCV
 
 
 def read() -> numpy.uint8:
@@ -25,71 +25,125 @@ def read() -> numpy.uint8:
 		if file.is_file():
 			break
 		else:
-			print("ERROR: Incorrect file-path!!")
+			print("ERROR: Incorrect file-path!!\n")
 			continue
 	while True:
 		print("Enter the image read mode:")
-		print("\t0 - Colored image")
-		print("\t1 - Black and White image")
+		print("\t0 -- Gray-scale")
+		print("\t1 -- Color")
 		mode = int(input())
 		if mode in [0, 1]:
-			mode = cv2.IMREAD_COLOR if 0 else cv2.IMREAD_GRAYSCALE
+			if mode == 0:
+				mode = cv2.IMREAD_GRAYSCALE
+			elif mode == 1:
+				mode = cv2.IMREAD_COLOR
+			else:
+				mode = cv2.IMREAD_UNCHANGED
 			break
 		else:
-			print("ERROR: Value out of range!!")
+			print("ERROR: Value out of range!!\n")
 			continue
 	image = cv2.imread(path, mode)
 	return image
 
 
-def denoise(image, mode=1, quality=0) -> numpy.uint8:
+def save(image, o_name, color=-2, denoise=-2, gradient=-2, edge=False, histogram=-1) -> None:
 	"""
-	Removes noise from the input image
+	Used for saving an image with modified names.
 
 	:param image: NumPy uint8 array (OpenCV Image Representation)
 	:type image: numpy.uint8
 
-	:param mode: Image color mode (default = 1).
+	:param o_name: Original Name of the Image
+	:type o_name: str
 
-		* 1 -- Colored Image
-		* 0 -- Gray-scale Image
-	:type mode: int
+	:param color: Color change modifier
 
-	:param quality: De-noising quality (default = 0)
+		* -1 -- HSV to BGR
+		* 0  -- BGR to Gray-scale
+		* 1  -- BGR to HSV
+		* 2  -- HSV to Gray-scale
+	:type color: int
 
-		* -1 -- low (Moderate Noise, High End Image Detail, Very Low Colored Image Distortion)
-		* 0  -- medium (Low Noise, Moderate End Image Detail, Low Colored Image Distortion)
-		* 1  -- high (Very Low Noise, Low End Image Detail, Moderate Colored Image Distortion)
-	:type quality: int
+	:param denoise: De-noising modifier
 
-	:return: NumPy uint8 array (OpenCV Image Representation)
-	:rtype: numpy.uint8
+		* -11 -- Low Reduction   ; Color Image
+		* 10  -- Medium Reduction; Color Image
+		* 11  -- High Reduction  ; Color Image
+		* -1  -- Low Reduction   ; Gray-scale Image
+		* 0   -- Medium Reduction; Gray-scale Image
+		* 1   -- High Reduction  ; Gray-scale Image
+	:type denoise: int
+
+	:param gradient: Gradient modifier
+
+		* -1 -- Scharr Derivative (Y-Axis)
+		* 0  -- Laplacian Derivative
+		* 1  -- Scharr Derivative (X-Axis)
+	:type gradient: int
+
+	:param edge: Edge detection flag
+	:type edge: int
+
+	:param histogram: Histogram generated modifier
+
+	:type histogram: int
+
+	:return: None
+	:rtype: None
 	"""
-	t_img = image
-	dst, template_window_size, search_window_size = None, 7, 21
-	if quality == -1:
-		h, h_color = 5, 5
-	elif quality == 0:
-		h, h_color = 10, 10
-	elif quality == 1:
-		h, h_color = 15, 15
-	else:
-		h, h_color = 0, 0
-	if mode == 1:
-		cv2.fastNlMeansDenoisingColored(t_img, dst, h, h_color, template_window_size, search_window_size)
-	else:
-		cv2.fastNlMeansDenoising(t_img, dst, h, template_window_size, search_window_size)
-	return t_img
+	name = o_name
+	if color != -2:
+		if color == -1:
+			name += "_HSV-BGR"
+		elif color == 0:
+			name += "_BGR-Gray"
+		elif color == 1:
+			name += "_BGR-HSV"
+		elif color == 2:
+			name += "_HSV-Gray"
+	if denoise != -2:
+		if denoise == -11:
+			name += "_low-color"
+		elif denoise == 10:
+			name += "_medium-color"
+		elif denoise == 11:
+			name += "_high-color"
+		elif denoise == -1:
+			name += "_low-gray"
+		elif denoise == 0:
+			name += "_medium-gray"
+		elif denoise == 1:
+			name += "_high-gray"
+	if gradient != -2:
+		if gradient == -1:
+			name += "_scharr-y"
+		elif gradient == 0:
+			name += "_laplacian"
+		elif gradient == 1:
+			name += "_scharr-x"
+	if edge is True:
+		name += "_edges"
+	if histogram != -1:
+		if histogram == 0:
+			name += "_histogram-curves"
+		elif histogram == 1:
+			name += "_histogram-lines"
+	name += ".jpeg"
+	cv2.imwrite(name, image, (cv2.IMWRITE_JPEG_QUALITY, 100))
 
 
-def change_color(image, mode=0) -> numpy.uint8:
+def change_color(image, mode = 0) -> numpy.uint8:
 	"""
 	Changes the image color-space
 
+	NOTE: This function isn't used widely within the analyser,
+			however it may be used in the future when expanding the analyser
+
 	:param image: NumPy uint8 array (OpenCV Image Representation)
 	:type image: numpy.uint8
 
-	:param mode: Image color conversion mode
+	:param mode: Image color conversion mode (default = 0)
 
 		* -1 -- HSV to BGR
 		* 0  -- BGR to Gray-scale
@@ -113,14 +167,65 @@ def change_color(image, mode=0) -> numpy.uint8:
 	return t_img
 
 
-def gradient(image, mode=0) -> numpy.uint8:
+def de_noise(image, mode=1, quality=0) -> numpy.uint8:
 	"""
-	Returns an image with it's gradient highlighted
+	Removes noise from the input image
+
+	NOTE: Other functions (image gradients, edge detections, etc.) de-noise the image on their own
 
 	:param image: NumPy uint8 array (OpenCV Image Representation)
 	:type image: numpy.uint8
 
-	:param mode: Image gradient calculation mode
+	:param mode: Image color mode (default = 1).
+
+		* 1 -- Colored Image
+		* 0 -- Gray-scale Image
+	:type mode: int
+
+	:param quality: De-noising quality (default = 0)
+
+		* -1 -- low (Moderate Noise, High End Image Detail, Very Low Colored Image Distortion)
+		* 0  -- medium (Low Noise, Moderate End Image Detail, Low Colored Image Distortion)
+		* 1  -- high (Very Low Noise, Low End Image Detail, Moderate Colored Image Distortion)
+	:type quality: int
+
+	:return: NumPy uint8 array (OpenCV Image Representation)
+	:rtype: numpy.uint8
+	"""
+	t_img = image
+	dst = None
+	template_window_size = 7
+	search_window_size = 21
+	if quality == -1:
+		h = 5
+		h_color = 5
+	elif quality == 0:
+		h = 10
+		h_color = 10
+	elif quality == 1:
+		h = 15
+		h_color = 15
+	else:
+		h = 0
+		h_color = 0
+	if mode == 1:
+		cv2.fastNlMeansDenoisingColored(t_img, dst, h, h_color, template_window_size, search_window_size)
+	else:
+		cv2.fastNlMeansDenoising(t_img, dst, h, template_window_size, search_window_size)
+	return t_img
+
+
+def get_gradient(image, mode=0) -> numpy.uint8:
+	"""
+	Returns an image with it's gradient highlighted
+	
+	NOTE: This function isn't used widely within the analyser,
+			however it may be used in the future when expanding the analyser
+
+	:param image: NumPy uint8 array (OpenCV Image Representation)
+	:type image: numpy.uint8
+
+	:param mode: Image gradient calculation mode (default = 0)
 
 		* -1 -- Scharr Derivative (Y-Axis)
 		* 0  -- Laplacian Derivatives
@@ -132,31 +237,35 @@ def gradient(image, mode=0) -> numpy.uint8:
 	"""
 	t_img = image
 	d_depth = cv2.CV_64F
-	dst = None
 	k_size = -1
 	if mode == 1:
-		dx, dy = 1, 0
+		dx = 1
+		dy = 0
 	elif mode == -1:
-		dx, dy = 0, 1
+		dx = 0
+		dy = 1
 	else:
-		dx, dy = 0, 0
+		dx = 0
+		dy = 0
 	if mode == 0:
-		t_img = cv2.Laplacian(t_img, d_depth, dst, k_size)
+		t_img = cv2.Laplacian(t_img, d_depth, ksize = k_size)
 	elif abs(mode) == 1:
-		t_img = numpy.uint8(numpy.absolute(cv2.Scharr(t_img, d_depth, dx, dy)))
+		t_img = cv2.Scharr(t_img, d_depth, dx, dy)
+		t_img = numpy.absolute(t_img)
+		t_img = numpy.uint8(t_img)
 		"""
 		Black-to-White transitions have a positive value, while White-to-Black transitions have a negative value.
 		
-		Hence, when data is converted to numpy.uint8 (or cv2.CV_8U), all negative slopes are made zero, i.e.,
+		Hence, when data is converted to numpy.uint8 (or cv2.CV_8U), all negative slopes become zero, i.e.,
 		that edge is missed.
-		
+	
 		To fix this issue, the output data-type is sent to a higher range type, i.e., numpy.float64 (or cv2.CV_64F),
 		it's absolute value is taken, and then it is converted back to numpy.uint8
 		"""
 	return t_img
 
 
-def edge(image, threshold_1, threshold_2) -> numpy.uint8:
+def detect_edge(image, threshold_1, threshold_2) -> numpy.uint8:
 	"""
 	Returns a binary image of the input image with the edges highlighted using the Canny Edge Detection Algorithm
 
@@ -172,7 +281,10 @@ def edge(image, threshold_1, threshold_2) -> numpy.uint8:
 	:return: NumPy uint8 array (OpenCV Image Representation)
 	:rtype: numpy.uint8
 	"""
-	return cv2.Canny(image, threshold_1, threshold_2, L2gradient = True)
+	t_img = image
+	gradient_mode = True
+	t_img = cv2.Canny(t_img, threshold_1, threshold_2, L2gradient = gradient_mode)
+	return t_img
 
 
 def histogram_gen(image, mode=0):
@@ -196,8 +308,12 @@ def histogram_gen(image, mode=0):
 	t_img = image
 	bins = numpy.arange(256).reshape(256, 1)
 	histogram = numpy.zeros((300, 256, 3))
-	mask, hist_size, ranges = None, [256], [0, 256]
-	alpha, beta, norm_type = 0, 255, cv2.NORM_MINMAX
+	mask = None
+	hist_size = [256]
+	ranges = [0, 256]
+	alpha = 0
+	beta = 255
+	norm_type = cv2.NORM_MINMAX
 	color = [(255, 255, 255)]
 	if mode == 0:
 		if t_img.shape[2] == 3:
