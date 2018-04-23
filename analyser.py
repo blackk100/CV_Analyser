@@ -71,8 +71,10 @@ def denoise(image, mode=1, quality=0) -> int:
 		h, h_color = 5, 5
 	elif quality == 0:
 		h, h_color = 10, 10
-	else:
+	elif quality == 1:
 		h, h_color = 15, 15
+	else:
+		h, h_color = 0, 0
 	if mode == 1:
 		cv2.fastNlMeansDenoisingColored(t_img, dst, h, h_color, template_window_size, search_window_size)
 	else:
@@ -99,14 +101,56 @@ def change_color(image, mode=0) -> int:
 	:rtype: int
 	"""
 	t_img = image
-	dst, dst_code = None, None
-	if mode == 0:  # BGR to Gray-scale
-		t_img = cv2.cvtColor(t_img, cv2.COLOR_BGR2GRAY, dst, dst_code)
-	elif mode == 1:  # BGR to HSV
-		t_img = cv2.cvtColor(t_img, cv2.COLOR_BGR2HSV, dst, dst_code)
-	elif mode == -1:  # HSV to BGR
-		t_img = cv2.cvtColor(t_img, cv2.COLOR_HSV2BGR, dst, dst_code)
-	elif mode == 2:  # HSV to Gray-scale
+	if mode == 0:
+		t_img = cv2.cvtColor(t_img, cv2.COLOR_BGR2GRAY)
+	elif mode == 1:
+		t_img = cv2.cvtColor(t_img, cv2.COLOR_BGR2HSV)
+	elif mode == -1:
+		t_img = cv2.cvtColor(t_img, cv2.COLOR_HSV2BGR)
+	elif mode == 2:
 		t_img = change_color(t_img, -1)
 		t_img = change_color(t_img)
+	return t_img
+
+
+def gradient(image, mode=0) -> int:
+	"""
+	Returns an image with it's gradient highlighted
+
+	:param image: NumPy int8 array (OpenCV Image Representation)
+	:type image: int
+
+	:param mode: Image gradient calculation mode
+
+		* -1 -- Scharr Derivative (Y-Axis)
+		* 0  -- Laplacian Derivatives
+		* 1  -- Scharr Derivative (X-Axis)
+	:type mode: int
+
+	:return: NumPy int8 array (OpenCV Image Representation)
+	:rtype: int
+	"""
+	t_img = image
+	d_depth = cv2.CV_64F
+	dst = None
+	k_size = -1
+	if mode == 1:
+		dx, dy = 1, 0
+	elif mode == -1:
+		dx, dy = 0, 1
+	else:
+		dx, dy = 0, 0
+	if mode == 0:
+		t_img = cv2.Laplacian(t_img, d_depth, dst, k_size)
+	elif abs(mode) == 1:
+		t_img = numpy.uint8(numpy.absolute(cv2.Scharr(t_img, d_depth, dx, dy)))
+		"""
+		Black-to-White transitions have a positive value, while White-to-Black transitions have a negative value.
+		
+		Hence, when data is converted to numpy.uint8 (or cv2.CV_8U), all negative slopes are made zero, i.e.,
+		that edge is missed.
+		
+		To fix this issue, the output data-type is sent to a higher range type, i.e., numpy.float64 (or cv2.CV_64F),
+		it's absolute value is taken, and then it is converted back to numpy.uint8
+		"""
 	return t_img
