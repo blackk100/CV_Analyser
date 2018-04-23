@@ -154,3 +154,22 @@ def gradient(image, mode=0) -> int:
 		it's absolute value is taken, and then it is converted back to numpy.uint8
 		"""
 	return t_img
+
+
+def edge(image, threshold_1, threshold_2) -> int:
+	"""
+	Returns a binary image of the input image with the edges highlighted using the Canny Edge Detection Algorithm
+
+	:param image: NumPy int8 array (OpenCV Image Representation)
+	:type image: int
+
+	:param threshold_1: First threshold for the hysteresis procedure
+	:type threshold_1: int
+
+	:param threshold_2: Second threshold for the hysteresis procedure
+	:type threshold_2: int
+
+	:return: NumPy int8 array (OpenCV Image Representation)
+	:rtype: int
+	"""
+	return cv2.Canny(image, threshold_1, threshold_2, L2gradient = True)
