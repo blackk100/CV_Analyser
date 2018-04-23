@@ -6,18 +6,19 @@
 :External Dependencies: NumPy and OpenCV (see 'Pipfile' for packages)
 :Made with: PyCharm Community and pipenv
 """
+
 import numpy  # NumPy
 import cv2    # OpenCV
 
 
-def read() -> numpy.uint8:
+def read() -> (numpy.uint8, str):
 	"""
 	Reads and returns an image (includes user interactions)
 
-	:return: NumPy uint8 array (OpenCV Image Representation)
-	:rtype: numpy.uint8
+	:return: NumPy uint8 array (OpenCV Image Representation) & file name
+	:rtype: (numpy.uint8, str)
 	"""
-	from pathlib import Path  # Used for checking if the file exists
+	from pathlib import Path
 	while True:
 		print("Enter relative path to the image to be read (including the filename with extension):")
 		path = input()
@@ -44,7 +45,7 @@ def read() -> numpy.uint8:
 			print("ERROR: Value out of range!!\n")
 			continue
 	image = cv2.imread(path, mode)
-	return image
+	return image, file.name
 
 
 def save(image, o_name, color=-2, denoise=-2, gradient=-2, edge=False, histogram=-1) -> None:
