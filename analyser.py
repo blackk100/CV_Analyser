@@ -32,16 +32,19 @@ def read() -> (numpy.uint8, str):
 		print("Enter the image read mode:")
 		print("\t0 -- Gray-scale")
 		print("\t1 -- Color")
-		mode = int(input())
-		if mode in [0, 1]:
-			if mode == 0:
-				mode = cv2.IMREAD_GRAYSCALE
-			elif mode == 1:
-				mode = cv2.IMREAD_COLOR
+		try:
+			mode = int(input())
+			if mode in [0, 1]:
+				if mode == 0:
+					mode = cv2.IMREAD_GRAYSCALE
+				elif mode == 1:
+					mode = cv2.IMREAD_COLOR
+				else:
+					mode = cv2.IMREAD_UNCHANGED
+				break
 			else:
-				mode = cv2.IMREAD_UNCHANGED
-			break
-		else:
+				raise ValueError
+		except ValueError:
 			print("ERROR: Value out of range!!\n")
 			continue
 	image = cv2.imread(path, mode)
@@ -69,10 +72,10 @@ def save(image, o_name, color=-2, denoise=-2, gradient=-2, edge=False, histogram
 	:param denoise: De-noising modifier
 
 		* -11 -- Low Reduction   ; Color Image
-		* 10  -- Medium Reduction; Color Image
+		* 10  -- Moderate Reduction; Color Image
 		* 11  -- High Reduction  ; Color Image
 		* -1  -- Low Reduction   ; Gray-scale Image
-		* 0   -- Medium Reduction; Gray-scale Image
+		* 0   -- Moderate Reduction; Gray-scale Image
 		* 1   -- High Reduction  ; Gray-scale Image
 	:type denoise: int
 
@@ -107,13 +110,13 @@ def save(image, o_name, color=-2, denoise=-2, gradient=-2, edge=False, histogram
 		if denoise == -11:
 			name += "_low-color"
 		elif denoise == 10:
-			name += "_medium-color"
+			name += "_moderate-color"
 		elif denoise == 11:
 			name += "_high-color"
 		elif denoise == -1:
 			name += "_low-gray"
 		elif denoise == 0:
-			name += "_medium-gray"
+			name += "_moderate-gray"
 		elif denoise == 1:
 			name += "_high-gray"
 	if gradient != -2:
@@ -179,14 +182,14 @@ def de_noise(image, mode=1, quality=0) -> numpy.uint8:
 
 	:param mode: Image color mode (default = 1).
 
-		* 1 -- Colored Image
 		* 0 -- Gray-scale Image
+		* 1 -- Colored Image
 	:type mode: int
 
 	:param quality: De-noising quality (default = 0)
 
 		* -1 -- low (Moderate Noise, High End Image Detail, Very Low Colored Image Distortion)
-		* 0  -- medium (Low Noise, Moderate End Image Detail, Low Colored Image Distortion)
+		* 0  -- moderate (Low Noise, Moderate End Image Detail, Low Colored Image Distortion)
 		* 1  -- high (Very Low Noise, Low End Image Detail, Moderate Colored Image Distortion)
 	:type quality: int
 
@@ -266,17 +269,17 @@ def get_gradient(image, mode=0) -> numpy.uint8:
 	return t_img
 
 
-def detect_edge(image, threshold_1, threshold_2) -> numpy.uint8:
+def detect_edge(image, threshold_1=100, threshold_2=250) -> numpy.uint8:
 	"""
 	Returns a binary image of the input image with the edges highlighted using the Canny Edge Detection Algorithm
 
 	:param image: NumPy uint8 array (OpenCV Image Representation)
 	:type image: numpy.uint8
 
-	:param threshold_1: First threshold for the hysteresis procedure
+	:param threshold_1: 1st threshold for the hysteresis procedure (default = 100)
 	:type threshold_1: int
 
-	:param threshold_2: Second threshold for the hysteresis procedure
+	:param threshold_2: 2nd threshold for the hysteresis procedure (default = 250)
 	:type threshold_2: int
 
 	:return: NumPy uint8 array (OpenCV Image Representation)
