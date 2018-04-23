@@ -1,21 +1,21 @@
 # coding=utf-8
 """
-Name: analyser.py
-Description: Python Script for analysing interference patterns by using OpenCV
-Author: blackk100 (blackk100.github.io)
-External Dependencies: NumPy and OpenCV (see 'Pipfile' for packages)
-Made with: PyCharm Community and pipenv
+:Name: analyser.py
+:Description: Python Script for analysing interference patterns by using OpenCV
+:Author: blackk100 (blackk100.github.io)
+:External Dependencies: NumPy and OpenCV (see 'Pipfile' for packages)
+:Made with: PyCharm Community and pipenv
 """
 import numpy
 import cv2
 
 
-def read() -> int:
+def read() -> numpy.uint8:
 	"""
 	Reads and returns an image (includes user interactions)
 
-	:return: NumPy int8 array (OpenCV Image Representation)
-	:rtype: int
+	:return: NumPy uint8 array (OpenCV Image Representation)
+	:rtype: numpy.uint8
 	"""
 	from pathlib import Path  # Used for checking if the file exists
 	while True:
@@ -42,12 +42,12 @@ def read() -> int:
 	return image
 
 
-def denoise(image, mode=1, quality=0) -> int:
+def denoise(image, mode=1, quality=0) -> numpy.uint8:
 	"""
 	Removes noise from the input image
 
-	:param image: NumPy int8 array (OpenCV Image Representation)
-	:type image: int
+	:param image: NumPy uint8 array (OpenCV Image Representation)
+	:type image: numpy.uint8
 
 	:param mode: Image color mode (default = 1).
 
@@ -62,8 +62,8 @@ def denoise(image, mode=1, quality=0) -> int:
 		* 1  -- high (Very Low Noise, Low End Image Detail, Moderate Colored Image Distortion)
 	:type quality: int
 
-	:return: NumPy int8 array (OpenCV Image Representation)
-	:rtype: int
+	:return: NumPy uint8 array (OpenCV Image Representation)
+	:rtype: numpy.uint8
 	"""
 	t_img = image
 	dst, template_window_size, search_window_size = None, 7, 21
@@ -82,12 +82,12 @@ def denoise(image, mode=1, quality=0) -> int:
 	return t_img
 
 
-def change_color(image, mode=0) -> int:
+def change_color(image, mode=0) -> numpy.uint8:
 	"""
 	Changes the image color-space
 
-	:param image: NumPy int8 array (OpenCV Image Representation)
-	:type image: int
+	:param image: NumPy uint8 array (OpenCV Image Representation)
+	:type image: numpy.uint8
 
 	:param mode: Image color conversion mode
 
@@ -97,8 +97,8 @@ def change_color(image, mode=0) -> int:
 		* 2  -- HSV to Gray-scale
 	:type mode: int
 
-	:return: NumPy int8 array (OpenCV Image Representation)
-	:rtype: int
+	:return: NumPy uint8 array (OpenCV Image Representation)
+	:rtype: numpy.uint8
 	"""
 	t_img = image
 	if mode == 0:
@@ -113,12 +113,12 @@ def change_color(image, mode=0) -> int:
 	return t_img
 
 
-def gradient(image, mode=0) -> int:
+def gradient(image, mode=0) -> numpy.uint8:
 	"""
 	Returns an image with it's gradient highlighted
 
-	:param image: NumPy int8 array (OpenCV Image Representation)
-	:type image: int
+	:param image: NumPy uint8 array (OpenCV Image Representation)
+	:type image: numpy.uint8
 
 	:param mode: Image gradient calculation mode
 
@@ -127,8 +127,8 @@ def gradient(image, mode=0) -> int:
 		* 1  -- Scharr Derivative (X-Axis)
 	:type mode: int
 
-	:return: NumPy int8 array (OpenCV Image Representation)
-	:rtype: int
+	:return: NumPy uint8 array (OpenCV Image Representation)
+	:rtype: numpy.uint8
 	"""
 	t_img = image
 	d_depth = cv2.CV_64F
@@ -156,12 +156,12 @@ def gradient(image, mode=0) -> int:
 	return t_img
 
 
-def edge(image, threshold_1, threshold_2) -> int:
+def edge(image, threshold_1, threshold_2) -> numpy.uint8:
 	"""
 	Returns a binary image of the input image with the edges highlighted using the Canny Edge Detection Algorithm
 
-	:param image: NumPy int8 array (OpenCV Image Representation)
-	:type image: int
+	:param image: NumPy uint8 array (OpenCV Image Representation)
+	:type image: numpy.uint8
 
 	:param threshold_1: First threshold for the hysteresis procedure
 	:type threshold_1: int
@@ -169,7 +169,57 @@ def edge(image, threshold_1, threshold_2) -> int:
 	:param threshold_2: Second threshold for the hysteresis procedure
 	:type threshold_2: int
 
-	:return: NumPy int8 array (OpenCV Image Representation)
-	:rtype: int
+	:return: NumPy uint8 array (OpenCV Image Representation)
+	:rtype: numpy.uint8
 	"""
 	return cv2.Canny(image, threshold_1, threshold_2, L2gradient = True)
+
+
+def histogram_gen(image, mode=0):
+	"""
+	Returns a histogram (as curves or as lines (binary image))
+	
+	Based off https://github.com/opencv/opencv/blob/master/samples/python/hist.py
+
+	:param image: NumPy uint8 array (OpenCV Image Representation)
+	:type image: numpy.uint8
+
+	:param mode: Histogram generation mode
+
+		* 0 -- Curves
+		* 1 -- Lines
+	:type mode: int
+
+	:return: NumPy uint8 array (OpenCV Image Representation)
+	:rtype: numpy.uint8
+	"""
+	t_img = image
+	bins = numpy.arange(256).reshape(256, 1)
+	histogram = numpy.zeros((300, 256, 3))
+	mask, hist_size, ranges = None, [256], [0, 256]
+	alpha, beta, norm_type = 0, 255, cv2.NORM_MINMAX
+	color = [(255, 255, 255)]
+	if mode == 0:
+		if t_img.shape[2] == 3:
+			color = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+		else:
+			color = [(0, 0, 0)]
+		is_closed = False
+		for channel, colour in enumerate(color):
+			hist_item = cv2.calcHist([t_img], [channel], mask, hist_size, ranges)
+			cv2.normalize(hist_item, hist_item, alpha, beta, norm_type)
+			hist = numpy.int32(numpy.around(hist_item))
+			pts = numpy.int32(numpy.column_stack((bins, hist)))
+			cv2.polylines(histogram, [pts], is_closed, colour)
+	elif mode == 1:
+		if len(t_img.shape) != 2:
+			t_img = change_color(t_img)
+		channel = 0
+		hist_item = cv2.calcHist([t_img], [channel], mask, hist_size, ranges)
+		cv2.normalize(hist_item, hist_item, alpha, beta, norm_type)
+		hist = numpy.int32(numpy.around(hist_item))
+		for x, y in enumerate(hist):
+			pt1 = (x, 0)
+			pt2 = (x, y)
+			cv2.line(histogram, pt1, pt2, color[0])
+	return numpy.flipud(histogram)
