@@ -12,7 +12,7 @@ log, err = [], ""
 
 
 def read():
-	""" Reads and returns an image """
+	""" Reads and returns an image (includes user interactions) """
 	log.append("read() Started")
 	from pathlib import Path  # Used for checking if the file exists
 	global err
@@ -20,14 +20,14 @@ def read():
 		print("Enter relative path to the image to be read (including the filename with extension):")
 		path = input()
 		file = Path(path)
-		log.append("Path input: " + path + "")
+		log.append("Path input: " + path)
 		if file.is_file():
 			log.append("File-path Verified")
 			break
 		else:
 			err = "ERROR: Incorrect file-path!!"
 			print(err)
-			log.append("" + err + "")
+			log.append(err)
 			continue
 	while True:
 		print("Enter the image read mode:")
@@ -40,7 +40,44 @@ def read():
 			log.append("Image Read Mode Verified and Assigned Assigned")
 			break
 		else:
-			print("ERROR: Value out of range!!")
+			err = "ERROR: Value out of range!!"
+			print(err)
+			log.append(err)
 			continue
-	img = cv2.imread(path, mode)
-	return img
+	image = cv2.imread(path, mode)
+	return image
+
+
+def denoise(image, mode=1, quality=0):
+	"""
+	Removes noise from the image
+	
+	Parameters:
+		image   -- OpenCV Image Object
+		mode    -- Color mode (default = 1)
+					1 -- Colored image
+					0 -- Gray-scale image
+		quality -- used to specify the de-noising quality (default = 0)
+					-1 -- low (Moderate Noise, High End Image Detail, Very Low Colored Image Distortion)
+					0  -- medium (Low Noise, Moderate End Image Detail, Low Colored Image Distortion)
+					1  -- high (Very Low Noise, Low End Image Detail, Moderate Colored Image Distortion)
+	"""
+	dst = None
+	template_window_size = 7
+	search_window_size = 21
+	if quality == -1:
+		h = 5
+		if mode == 1:
+			h_color = 5
+	elif quality == 0:
+		h = 10
+		if mode == 1:
+			h_color = 10
+	else:
+		h = 15
+		if mode == 1:
+			h_color = 15
+	if mode == 1:
+		cv2.fastNlMeansDenoisingColored(image, dst, h, h_color, template_window_size, search_window_size)
+	else:
+		cv2.fastNlMeansDenoising(image, dst, h, template_window_size, search_window_size)
