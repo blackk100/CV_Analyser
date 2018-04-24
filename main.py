@@ -74,6 +74,7 @@ if __name__ == "__main__":
 		"modification tracking and external logging (or log dumping)",
 	]
 	pprint(intro)
+
 	while True:  # Menu Navigation
 		menu_opt = menu()
 		if menu_opt == 1:  # Image reading
@@ -111,16 +112,40 @@ if __name__ == "__main__":
 				elif menu_opt == 3:  # Save image
 					analyser.save(img, img_mod[0], img_mod[1], img_mod[2], img_mod[3], img_mod[4], img_mod[5])
 				elif menu_opt == 4:  # Change color-space
-					pass
+					cc = True
+					mode = 0
+					while cc:
+						try:
+							oupt = [
+								"\n Enter color-space conversion method (selecting an incorrect option may result in "
+								"unknown behaviour and may even cause the program to crash):"
+								"):",
+								" \t1) HSV to RGB ",
+								" \t2) RGB to Gray-scale",
+								" \t3) RGB to HSV",
+								" \t4) HSV to Gray-scale"
+							]
+							pprint(oupt)
+							mode = int(input()) - 2
+							if mode not in range(-1, 2):
+								raise ValueError
+							else:
+								cc = False
+						except ValueError:
+							print("\n ERROR: Incorrect option entered!! Please only enter a number between 1 & 3!!")
+							continue
+					img = analyser.change_color(img, mode)
 				elif menu_opt == 5:  # Remove noise
-					while True:
+					mode, quality = 1, 0
+					rn = True
+					while rn:
 						try:
 							oupt = [
 								"\n Enter the de-noising quality:",
-								" \t1) Low      - Moderate Noise, High End Image Detail, Very Low Colored Image "
+								" \t1) Low      -- Moderate Noise, High End Image Detail, Very Low Colored Image "
 								"Distortion",
-								" \t2) Moderate - Low Noise; Moderate End Image Detail, Low Colored Image Distortion",
-								" \t3) High     - Very Low Noise, Low End Image Detail, Moderate Colored Image "
+								" \t2) Moderate -- Low Noise; Moderate End Image Detail, Low Colored Image Distortion",
+								" \t3) High     -- Very Low Noise, Low End Image Detail, Moderate Colored Image "
 								"Distortion"
 							]
 							pprint(oupt)
@@ -128,11 +153,12 @@ if __name__ == "__main__":
 							if quality not in range(-1, 2):
 								raise ValueError
 							else:
-								break
+								rn = False
 						except ValueError:
 							print("\n ERROR: Incorrect option entered!! Please only enter a number between 1 & 3!!")
 							continue
-					while True:
+					rn = True
+					while rn:
 						try:
 							oupt = [
 								"\n Enter the image colour-space (Entering an incorrect value can cause unexpected "
@@ -145,7 +171,7 @@ if __name__ == "__main__":
 							if mode not in [0, 1]:
 								raise ValueError
 							else:
-								break
+								rn = False
 						except ValueError:
 							print("\n ERROR: Incorrect option entered!! Please only enter a number between 1 & 2!!")
 							continue
@@ -155,7 +181,9 @@ if __name__ == "__main__":
 						mod *= -1
 					img_mod[2] = mod
 				elif menu_opt == 6:  # Get Gradient
-					while True:
+					mode = 0
+					gg = True
+					while gg:
 						try:
 							oupt = [
 								"\n Enter the gradient type:",
@@ -168,14 +196,17 @@ if __name__ == "__main__":
 							if mode not in range(-1, 2):
 								raise ValueError
 							else:
-								break
+								gg = False
 						except ValueError:
 							print("\n ERROR: Incorrect option entered!! Please only enter a number between 1 & 3!!")
 							continue
 					img = analyser.get_gradient(img, mode)
 					img_mod[3] = mode
 				elif menu_opt == 7:  # Get Edges
-					while True:
+					ge = True
+					d1, d2 = True, True
+					threshold_1, threshold_2 = -1, -1
+					while ge:
 						try:
 							oupt = [
 								"\n Enter the 1st threshold for the hysteresis procedure",
@@ -189,7 +220,7 @@ if __name__ == "__main__":
 							threshold_2 = int(input())
 							d1 = threshold_1 == -1
 							d2 = threshold_2 == -1
-							break
+							ge = False
 						except ValueError:
 							print("\n ERROR: Incorrect value entered!! Please only an integer greater than -2!!")
 							continue
