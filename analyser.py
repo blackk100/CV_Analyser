@@ -71,12 +71,12 @@ def save(image, o_name, color=-2, denoise=-2, gradient=-2, edge=False, histogram
 
 	:param denoise: De-noising modifier
 
-		* -11 -- Low Reduction   ; Color Image
+		* -11 -- Low Reduction     ; Color Image
 		* 10  -- Moderate Reduction; Color Image
-		* 11  -- High Reduction  ; Color Image
-		* -1  -- Low Reduction   ; Gray-scale Image
+		* 11  -- High Reduction    ; Color Image
+		* -1  -- Low Reduction     ; Gray-scale Image
 		* 0   -- Moderate Reduction; Gray-scale Image
-		* 1   -- High Reduction  ; Gray-scale Image
+		* 1   -- High Reduction    ; Gray-scale Image
 	:type denoise: int
 
 	:param gradient: Gradient modifier
@@ -91,6 +91,8 @@ def save(image, o_name, color=-2, denoise=-2, gradient=-2, edge=False, histogram
 
 	:param histogram: Histogram generated modifier
 
+		* 0 -- Curve Histogram
+		* 1 -- Line Histogram
 	:type histogram: int
 
 	:return: None
