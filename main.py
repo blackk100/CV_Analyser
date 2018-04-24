@@ -1,8 +1,9 @@
 # coding=utf-8
 """
 :Name: main.py
-:Description: A Python based commandline interface to the analyser
+:Description: A Python based commandline interface to the core analyser
 :Author: blackk100 (blackk100.github.io)
+:Version: Pre-Alpha
 :External Dependencies: NumPy and OpenCV (see 'Pipfile' for packages)
 :Made with: PyCharm Community and pipenv
 """

@@ -1,8 +1,9 @@
 # coding=utf-8
 """
 :Name: analyser.py
-:Description: Python Script for analysing interference patterns by using OpenCV
+:Description: Python script interface for procesing images by using OpenCV.
 :Author: blackk100 (blackk100.github.io)
+:Version: Pre-Alpha
 :External Dependencies: NumPy and OpenCV (see 'Pipfile' for packages)
 :Made with: PyCharm Community and pipenv
 """
