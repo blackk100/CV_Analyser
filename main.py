@@ -1,309 +1,65 @@
 # coding=utf-8
 """
 :Name: main.py
-:Description: A Python based commandline interface to the core analyser
-:Author: blackk100 (blackk100.github.io)
+:Description: Run file. Checks for the correct interpreter version and gracefully exits when encountering an error
+:Author: blackk100 - https://blackk100.github.io
 :Version: Pre-Alpha
-:External Dependencies: NumPy and OpenCV (see 'Pipfile' for packages)
-:Made with: PyCharm Community and pipenv
+:Dependencies: See 'Pipfile' for project-wide dependencies
 """
 
+from sys import version_info as vi  # Python Interpreter Version
+from time import sleep              # Slowing down execution
+
+
+def version_check(version) -> int:
+	"""
+	Checks the current python interpreter version
+
+	:param version:
+	:type version:
+	:return: An integer depending on the interpreter version
+	:rtype: int
+	"""
+	print("Current Python interpreter version: " + version[0] + "." + version[1] + "." + version[2])
+	if version[0] >= 3:
+		if (version[0] == 3) and (version[1] == 6) and (version[2] == 5):
+			return 1
+		return 0
+	else:
+		return -1
+
+
 if __name__ == "__main__":
-	from pprint import pprint  # Pretty print
-	from time import sleep  # Time delay
-	import cv2  # OpenCV
-	import analyser  # CV_Analyser
-
-	def menu() -> int:
-		"""
-		Prints the menu and accepts the option selected
-
-		:return: The menu option
-		:rtype: int
-		"""
-		string = [
-			"\n Options:",
-			" \t1) Read a new image",
-			" \t2) Display the current image",
-			" \t3) Save the current image",
-			" \t4) Change the color-space of the current image",
-			" \t5) Remove Noise from the Image (The Image Gradient extraction function does this automatically)",
-			" \t6) Get the Image Gradient (The Edge Detection & Histogram Generation functions do this automatically)",
-			" \t7) Detect Edges in the current image",
-			" \t8) Generate a Color Frequency Histogram of the current image",
-			" \t9) Exit (Hard-exits. DOES NOT SAVE THE CURRENT IMAGE!)"
-		]
-		while True:
-			pprint(string)
-			try:
-				inpt = int(input())
-				if inpt not in range(1, 9):
-					raise ValueError
-				else:
-					return inpt
-			except ValueError:
-				print("\n ERROR: Incorrect option entered!! Please only enter a number between 1 & 8!!")
-				continue
-
-	def prog_exit() -> bool:
-		""""""
-		while True:
-			try:
-				print("Are you sure? (Y/N)")
-				conf = input().capitalize()
-				if conf == "Y":
-					return True
-				elif conf == "N":
-					return False
-				else:
-					raise ValueError
-			except ValueError:
-				print("\n ERROR: Incorrect option entered!! Please only enter 'Y', 'y', 'N' or 'n'!!")
-				continue
-
-	img = None
-	img_mod = ["", -2, -2, -2, False, -1]  # Used for saving modified files
-	intro = [
-		"\n Welcome to CV_Analyser!",
-		"\n CV_Analyser is currently in alpha. The author takes no responsibility for any damages to any software"
-		"or hardware. The author does not guarantee accurate results. Use at your own risk.\n",
-		"\n Press Ctrl + C to force exit the program anytime (the program may lag for a few minutes while "
-		"computing.\n Computation speed depends upon free CPU time and Memory (RAM) available).",
-		"\n Any modifications done below cannot be undone, however, the original image file will remain "
-		"untouched.\n Save regularly.",
-		"\n Kindly keep track of all modifications you perform. CV_Analyser currently doesn't support "
-		"modification tracking and external logging (or log dumping)",
-	]
-	pprint(intro)
-
-	while True:  # Menu Navigation
-		menu_opt = menu()
-		if menu_opt == 1:  # Image reading
-			read = analyser.read()
-			img = read[0]
-			img_mod[0] = read[1].split(".", 1)[0]
-		elif menu_opt == 9:  # Exit
-			conf = prog_exit()
-			if conf:
-				break
-			else:
-				continue
+	try:
+		import errors
+		import interface
+	
+		check_result = version_check(vi)
+		if check_result > -1:
+			if check_result == 0:
+				print("\n CV_Analyser has only been tested on Python 3.6.5 by the author.")
+				print(
+					"The author takes no responsibility for any errors occurring due to usage of an untested "
+					"interpreter."
+				)
+			interface.main()
 		else:
-			if img is None:
-				print("\n ERROR: No image file loaded!!")
-				continue
-			else:
-				if menu_opt == 2:  # Display image
-					strings = [
-						"\n Keymap:",
-						" \tESC -- Exit display"
-					]
-					pprint(strings)
-					sleep(2.5)
-					print("\n Starting GUI. Refer to keymap given above.")
-					sleep(2.5)
-					cv2.imshow(img_mod[0], img)
-					di = True
-					while di:
-						k = cv2.waitKey(0)
-						if k == 27:
-							print("ESC")
-							cv2.destroyAllWindows()
-							di = False
-				elif menu_opt == 3:  # Save image
-					analyser.save(img, img_mod[0], img_mod[1], img_mod[2], img_mod[3], img_mod[4], img_mod[5])
-				elif menu_opt == 4:  # Change color-space
-					cc = True
-					mode = 0
-					while cc:
-						try:
-							oupt = [
-								"\n Enter color-space conversion method (selecting an incorrect option may result in "
-								"unknown behaviour and may even cause the program to crash):"
-								"):",
-								" \t1) HSV to RGB ",
-								" \t2) RGB to Gray-scale",
-								" \t3) RGB to HSV",
-								" \t4) HSV to Gray-scale"
-							]
-							pprint(oupt)
-							mode = int(input()) - 2
-							if mode not in range(-1, 2):
-								raise ValueError
-							else:
-								cc = False
-						except ValueError:
-							print("\n ERROR: Incorrect option entered!! Please only enter a number between 1 & 3!!")
-							continue
-					img = analyser.change_color(img, mode)
-				elif menu_opt == 5:  # Remove noise
-					mode, quality = 1, 0
-					rn = True
-					while rn:
-						try:
-							oupt = [
-								"\n Enter the de-noising quality:",
-								" \t1) Low      -- Moderate Noise, High End Image Detail, Very Low Colored Image "
-								"Distortion",
-								" \t2) Moderate -- Low Noise; Moderate End Image Detail, Low Colored Image Distortion",
-								" \t3) High     -- Very Low Noise, Low End Image Detail, Moderate Colored Image "
-								"Distortion"
-							]
-							pprint(oupt)
-							quality = int(input()) - 2
-							if quality not in range(-1, 2):
-								raise ValueError
-							else:
-								rn = False
-						except ValueError:
-							print("\n ERROR: Incorrect option entered!! Please only enter a number between 1 & 3!!")
-							continue
-					rn = True
-					while rn:
-						try:
-							oupt = [
-								"\n Enter the image colour-space (Entering an incorrect value can cause unexpected "
-								"behaviour, and may even lead to the program to crash):",
-								" \t1) Gray-scale",
-								" \t2) Coloured"
-							]
-							pprint(oupt)
-							mode = int(input()) - 1
-							if mode not in [0, 1]:
-								raise ValueError
-							else:
-								rn = False
-						except ValueError:
-							print("\n ERROR: Incorrect option entered!! Please only enter a number between 1 & 2!!")
-							continue
-					img = analyser.de_noise(img, mode, quality)
-					mod = (mode * 10) + abs(quality)
-					if quality < 0:
-						mod *= -1
-					img_mod[2] = mod
-				elif menu_opt == 6:  # Get Gradient
-					mode = 0
-					gg = True
-					while gg:
-						try:
-							oupt = [
-								"\n Enter the gradient type:",
-								" \t1) Scharr Derivative (Y-Axis)",
-								" \t2) Laplacian Derivative",
-								" \t3) Scharr Derivative (X-Axis)"
-							]
-							pprint(oupt)
-							mode = int(input()) - 2
-							if mode not in range(-1, 2):
-								raise ValueError
-							else:
-								gg = False
-						except ValueError:
-							print("\n ERROR: Incorrect option entered!! Please only enter a number between 1 & 3!!")
-							continue
-					img = analyser.get_gradient(img, mode)
-					img_mod[3] = mode
-				elif menu_opt == 7:  # Get Edges
-					ge = True
-					d1, d2 = True, True
-					threshold_1, threshold_2 = -1, -1
-					while ge:
-						try:
-							oupt = [
-								"\n Enter the 1st threshold for the hysteresis procedure",
-								" (-1 for default values)",
-								" (Very high or low values can cause unusual behaviour and may even crash the program)"
-							]
-							pprint(oupt)
-							print("\n 1st Threshold Value: ")
-							threshold_1 = int(input())
-							print("\n 2nd Threshold Value: ")
-							threshold_2 = int(input())
-							d1 = threshold_1 == -1
-							d2 = threshold_2 == -1
-							ge = False
-						except ValueError:
-							print("\n ERROR: Incorrect value entered!! Please only an integer greater than -2!!")
-							continue
-					if d1:
-						if d2:  # d1 and d2
-							img = analyser.detect_edge(img)
-						else:  # only d1
-							img = analyser.detect_edge(img, threshold_2 = threshold_2)
-					elif d2:   # only d2
-						img = analyser.detect_edge(img, threshold_1)
-					else:      # neither d1 or d2
-						img = analyser.detect_edge(img, threshold_1, threshold_2)
-					img_mod[4] = True
-				elif menu_opt == 8:  # Make histogram
-					strings = [
-						"\n Keymap:",
-						" \ta   -- Show histogram for color image in curve mode",
-						" \tb   -- Show histogram for gray-scale image in curve mode (converts coloured image into "
-						"gray-scale)",
-						" \tc   -- Show histogram in line mode (converts coloured image into gray-scale)",
-						" \ts   -- Save the current histogram",
-						" \tESC -- Exit display"
-					]
-					pprint(strings)
-					sleep(3)
-					gray = analyser.change_color(img)
-					print("\n Gray-scale image generated")
-					curve_col = analyser.histogram_gen(img)
-					print("\n Curve histogram for colored image generated")
-					curve_gray = analyser.histogram_gen(gray)
-					print("\n Curve histogram for gray-scale image generated")
-					line_gray = analyser.histogram_gen(gray, 1)
-					print("\n Line histogram for gra-scale image generated")
-					sleep(2.5)
-					print("\n Starting GUI. Refer to keymap given above.")
-					sleep(2.5)
-					cv2.imshow("Original Image - " + img_mod[0], img)
-					ko = ""
-					kn = cv2.waitKey(0)
-					hf = True
-					while hf:
-						if kn == ord("a"):
-							print("a")
-							cv2.imshow("Curve Histogram (Colored) - " + img_mod[0], curve_col)
-							cv2.imshow("Image (Colored) - " + img_mod[0], img)
-							img_mod[5] = 0
-						elif kn == ord("b"):
-							print("b")
-							cv2.imshow("Curve Histogram (Gray-scale) - " + img_mod[0], curve_gray)
-							cv2.imshow("Image (Gray-scale) - " + img_mod[0], gray)
-							img_mod[1] = 0
-							img_mod[5] = 1
-						elif kn == ord("c"):
-							print("c")
-							cv2.imshow("Line Histogram (Gray-scale) - " + img_mod[0], line_gray)
-							cv2.imshow("Image (Gray-scale) - " + img_mod[0], gray)
-							img_mod[1] = 0
-							img_mod[5] = 1
-						elif kn == ord("s"):
-							print("s")
-							if (ko == "") or (ko == "s"):
-								print("\n ERROR: No histogram currently selected!!")
-								continue
-							else:
-								if kn == ord("a"):
-									pass
-								elif kn == ord("b"):
-									pass
-								elif kn == ord("c"):
-									pass
-								else:
-									pass
-								analyser.save(
-										img, img_mod[0], img_mod[1], img_mod[2], img_mod[3], img_mod[4],
-										img_mod[5]
-								)
-						elif kn == 27:
-							print("ESC")
-							cv2.destroyAllWindows()
-							hf = False
-						ko, kn = kn, cv2.waitKey(0)
-
-print("Thank you for using CV_Analyser!")
-print("Made by blackk100 (https://blackk100.github.io/)")
-sleep(5)
+			raise errors.IncompatibleVersionError
+	except ImportError:
+		errors, interface = None, None
+		print("Unable to import the required components.")
+		print("Verify all dependencies are accessible from the current interpreter.")
+		print("Verify all CV_Analyser files are present in the current working directory.")
+	except errors.IncompatibleVersionError as e:
+		print("ERROR: " + e.message)
+		print("\n CV_Analyser requires Python 3.0 or greater.")
+	except Exception as e:  # For catching errors that occur during actual program execution
+		print("UNKNOWN ERROR OCCURRED!!")
+		print("ERROR TRACEBACK: " + str(e))
+else:
+	print("CV_Analyser must be run independently!")
+	
+print("\nCV_Analyser will auto-exit in 1 minute.")
+sleep(90)  # Actually takes 1.5 minutes
+print("\nBye!")
+sleep(1)
