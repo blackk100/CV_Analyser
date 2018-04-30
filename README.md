@@ -13,20 +13,18 @@ CV_Analyser is a Python program and an accompanying terminal interface for proce
 
 ## Installation and Usage
 1. Download and install [Python 3.6.5](https://www.python.org/downloads/release/python-365/ "Python Release Python 3.6.5 | Python.org")
-   * Include the `pip` module
-   * Confirm that Python is added to the system `PATH` variable.
+    * Include the `pip` module.
+    * Confirm that Python is accessible from a terminal (i.e., it is added to the system `PATH` variable).
 2. [Clone](https://github.com/blackk100/CV_Analyser.git)/[download](https://github.com/blackk100/CV_Analyser/archive/master.zip) the repository.
-3. Open a terminal/command prompt, change the current working directory to that of the cloned repository/extracted 
+3. Open a terminal, change the current working directory to that of the cloned repository/extracted 
  folder.
 4. Run the following commands:
 
        python3 -m pip install pipenv
        python3 -m pipenv install --python 3.6.5
+       python3 -m pipenv lock
+       python3 -m pipenv sync
  
-5. Run main.py
+5. Run main.py:
 
-
-## TODO
-* Debug the analyser and the interface.
-* Create an executable binary file.
-* Switch over to Java for creating a cross-platform GUI.
+        python3 main.py

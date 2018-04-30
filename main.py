@@ -2,7 +2,7 @@
 """
 :Name: main.py
 :Description: Run file. Checks for the correct interpreter version and gracefully exits when encountering an error
-:Author: blackk100 - https://blackk100.github.io
+:Author: blackk100
 :Version: Pre-Alpha
 :Dependencies: See 'Pipfile' for project-wide dependencies
 """
@@ -37,29 +37,26 @@ if __name__ == "__main__":
 		check_result = version_check(vi)
 		if check_result > -1:
 			if check_result == 0:
-				print("\n CV_Analyser has only been tested on Python 3.6.5 by the author.")
-				print(
-					"The author takes no responsibility for any errors occurring due to usage of an untested "
-					"interpreter."
-				)
+				print("WARNING: CV_Analyser has only been tested on Python 3.6.5!")
 			interface.main()
 		else:
 			raise errors.IncompatibleVersionError
 	except ImportError:
-		errors, interface = None, None
 		print("Unable to import the required components.")
 		print("Verify all dependencies are accessible from the current interpreter.")
 		print("Verify all CV_Analyser files are present in the current working directory.")
 	except errors.IncompatibleVersionError as e:
 		print("ERROR: " + e.message)
-		print("\n CV_Analyser requires Python 3.0 or greater.")
+		print("CV_Analyser requires Python 3.0 or greater.")
+	except KeyboardInterrupt:
+		print("Force exit acknowledged.")
 	except Exception as e:  # For catching errors that occur during actual program execution
 		print("UNKNOWN ERROR OCCURRED!!")
 		print("ERROR TRACEBACK: " + str(e))
 else:
 	print("CV_Analyser must be run independently!")
 	
-print("\nCV_Analyser will auto-exit in 1 minute.")
-sleep(90)  # Actually takes 1.5 minutes
+print("\nCV_Analyser will auto-exit in 1.5 minutes.")
+sleep(90)
 print("\nBye!")
 sleep(1)

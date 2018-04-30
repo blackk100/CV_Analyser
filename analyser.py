@@ -2,7 +2,7 @@
 """
 :Name: analyser.py
 :Description: Core analyser script for processing images by using OpenCV
-:Author: blackk100 - https://blackk100.github.io/
+:Author: blackk100
 :Version: Pre-Alpha
 :Dependencies: NumPy and OpenCV
 """
@@ -82,6 +82,8 @@ def save_img(image, o_name) -> bool:
 		print("Enter the name of the output image file.",)
 		print("Do not enter an image format extension, the output format is locked to .jpeg)")
 		n_name = input()
+		n_name += ".a"
+		n_name = n_name.split(".")[0]
 		name = o_name + n_name + ".jpeg"
 		print("Entered modification: " + n_name)
 		print("Actual name of the file: " + name)
@@ -93,7 +95,7 @@ def save_img(image, o_name) -> bool:
 				if conf == "Y":
 					conf_f = False
 				elif conf == "N":
-					break
+					return save_img(image = image, o_name = o_name)
 				else:
 					raise errors.IncorrectImageSaveConfResponseError
 			except errors.IncorrectProgramExitResponseError as e:
@@ -107,6 +109,28 @@ def save_img(image, o_name) -> bool:
 	except FileNotFoundError:
 		print("ERROR: Path resolution error!")
 		return False
+	except Exception:
+		print("ERROR: Unknown error!")
+		return False
+
+
+def color_space_converter(image, color=False) -> numpy.uint8:
+	"""
+	Used for converting to the correct output color-space after processing an image.
+
+	:param image: numpy.uint8 array ()OpenCV Image Representation) (8-bit color or gray-scale image)
+	:type image:
+
+	:param color: Used to specify if the output need to be a 8-bit color or gray-scale image (default = False)
+	:type color: bool
+
+	:return: numpy.uint8 array (OpenCV Image Representation) (8-bit color or gray-scale image)
+	:rtype: numpy.uint8
+	"""
+	if len(image.shape) == 2:  # Single channel
+		return image if not color else cv2.cvtColor(src = image, code = cv2.COLOR_GRAY2BGR)
+	elif len(image.shape) == 3:  # Multi-channel
+		return image if color else cv2.cvtColor(src = image, code = cv2.COLOR_BGR2GRAY)
 
 
 def de_noise(color, gray, quality=0) -> (numpy.uint8, numpy.uint8):
@@ -152,7 +176,7 @@ def de_noise(color, gray, quality=0) -> (numpy.uint8, numpy.uint8):
 			templateWindowSize = 7,
 			searchWindowSize = 21
 	)
-	return color_o, gray_o
+	return color_space_converter(image = color_o, color = True), color_space_converter(image = gray_o)
 
 
 def get_gradient(color, gray, mode=0) -> (numpy.uint8, numpy.uint8):
@@ -186,7 +210,7 @@ def get_gradient(color, gray, mode=0) -> (numpy.uint8, numpy.uint8):
 		that edge is missed.
 	
 		To fix this issue, the output data-type is sent to a higher range type, i.e., numpy.float64 (or cv2.CV_64F),
-		Its absolute value is then taken, and subsequently converted back to numpy.uint8
+		its absolute value is then taken, and subsequently converted back to numpy.uint8
 
 		:param img: numpy.uint8 array (OpenCV Image Representation)
 		:type img: numpy.uint8
@@ -205,12 +229,11 @@ def get_gradient(color, gray, mode=0) -> (numpy.uint8, numpy.uint8):
 		img_o = numpy.uint8(img_o)
 		return img_o
 
+	dx, dy = 0, 0
 	if mode == 1:
-		dx, dy = 1, 0
+		dx += 1
 	elif mode == -1:
-		dx, dy = 0, 1
-	else:
-		dx, dy = 0, 0
+		dy += 1
 	if mode == 0:
 		color_o = cv2.Laplacian(src = color, ddepth = cv2.CV_64F, ksize = -1)
 		gray_o = cv2.Laplacian(src = gray, ddepth = cv2.CV_64F, ksize = -1)
@@ -219,7 +242,7 @@ def get_gradient(color, gray, mode=0) -> (numpy.uint8, numpy.uint8):
 		gray_o = scharr(img = gray, x = dx, y = dy)
 	else:
 		color_o, gray_o = color, gray
-	return color_o, gray_o
+	return color_space_converter(image = color_o, color = True), color_space_converter(image = gray_o)
 
 
 def detect_edge(color, gray, threshold_1=100, threshold_2=250) -> (numpy.uint8, numpy.uint8):
@@ -243,10 +266,10 @@ def detect_edge(color, gray, threshold_1=100, threshold_2=250) -> (numpy.uint8, 
 	"""
 	color_o = cv2.Canny(image = color, threshold1 = threshold_1, threshold2 = threshold_2, L2gradient = True)
 	gray_o = cv2.Canny(image = gray, threshold1 = threshold_1, threshold2 = threshold_2, L2gradient = True)
-	return color_o, gray_o
+	return color_space_converter(image = color_o, color = True), color_space_converter(image = gray_o)
 
 
-def histogram_gen(color, gray) -> (numpy.uint8, numpy.uint8):
+def histogram_gen(color, gray) -> (list, numpy.uint8):
 	"""
 	Returns histograms depicting the frequency of the occurrence of a given color
 
@@ -257,13 +280,13 @@ def histogram_gen(color, gray) -> (numpy.uint8, numpy.uint8):
 	:type gray: numpy.uint8
 
 	:return: NumPy uint8 arrays (OpenCV Image Representations)
-	:rtype: (numpy.uint8, numpy.uint8)
+	:rtype: (list, numpy.uint8)
 	"""
 
 	color_channels = cv2.split(m = color)
-	color_channels_hist = []
+	color_hist = []
 	for i in range(color_channels):
-		color_channels_hist.append(
+		color_hist.append(
 				cv2.calcHist(
 					images = [color_channels[i]],
 					channels = [i],
@@ -272,7 +295,6 @@ def histogram_gen(color, gray) -> (numpy.uint8, numpy.uint8):
 					ranges = [0, 256]
 				)
 		)
-	color_hist = cv2.merge(mv = color_channels_hist)
 
 	gray_hist = cv2.calcHist(images = gray, channels = [0], mask = None, histSize = [256], ranges = [0, 256])
 
