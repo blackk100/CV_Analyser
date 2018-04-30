@@ -20,11 +20,11 @@ CV_Analyser is a Python program and an accompanying terminal interface for proce
  folder.
 4. Run the following commands:
 
-       python3 -m pip install pipenv
-       python3 -m pipenv install --python 3.6.5
-       python3 -m pipenv lock
-       python3 -m pipenv sync
+       python -m pip install pipenv
+       python -m pipenv install --python 3.6.5
+       python -m pipenv lock
+       python -m pipenv sync
  
 5. Run main.py:
 
-        python3 -m pipenv run python main.py
+       python -m pipenv run python main.py
