@@ -27,4 +27,4 @@ CV_Analyser is a Python program and an accompanying terminal interface for proce
  
 5. Run main.py:
 
-        python3 main.py
+        python3 -m pipenv run python main.py
