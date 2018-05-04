@@ -28,9 +28,3 @@ CV_Analyser is a Python program and an accompanying terminal interface for proce
 5. Run main.py:
 
        python -m pipenv run python main.py
-
-## TODO
- * Create an executable binary file.
- * Use Java for a cross-platform GUI version.
- * Modify the histogram plots to super-impose the color of the pixel on the plotted line itself.
- * Change the histogram plots from lines to bars. Super-impose the color of the pixel on the plotted bars.
